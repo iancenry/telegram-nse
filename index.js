@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config();
 
 const TelegramBot = require('node-telegram-bot-api');
+const { onCallbackQuery } = require('./utils');
 
 const app = express();
 
@@ -29,6 +30,7 @@ let inline_keyboard = [
   ],
 ];
 
+// handle start command
 nse_bot.onText(/\/start/, (msg) => {
   nse_bot.sendMessage(
     msg.chat.id,
@@ -42,40 +44,10 @@ nse_bot.onText(/\/start/, (msg) => {
 });
 
 //handle keyboard prompts
-nse_bot.on('callback_query', function onCallbackQuery(callbackQuery) {
-  if (callbackQuery.data === `Get all stocks`) {
-    nse_bot
-      .sendMessage(callbackQuery.message.chat.id, 'Here are all stocks')
-      .catch((err) => console.log(err.message));
-  } else if (callbackQuery.data === `Get a particular stock price`) {
-    nse_bot
-      .sendMessage(
-        callbackQuery.message.chat.id,
-        'Kindly send the name of the stock',
-        {
-          reply_markup: {
-            force_reply: true,
-          },
-        }
-      )
-      .then((message) => {
-        const replyListenerId = nse_bot.onReplyToMessage(
-          message.chat.id,
-          message.message_id,
-          (message) => {
-            // prevent consecutive replys
-            nse_bot.removeReplyListener(replyListenerId);
-            const received_message = message.text;
-            nse_bot.sendMessage(
-              message.chat.id,
-              `Here is the price for ${received_message}`
-            );
-          }
-        );
-      })
-      .catch((err) => console.log(err.message));
-  }
-});
+nse_bot.on('callback_query', onCallbackQuery);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+
+// export to utils - cant use module.exports dut to circular dependency error
+exports.nse_bot = nse_bot;
