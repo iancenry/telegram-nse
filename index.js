@@ -59,12 +59,12 @@ nse_bot.on('callback_query', function onCallbackQuery(callbackQuery) {
         }
       )
       .then((message) => {
-        console.log(message);
-
-        nse_bot.onReplyToMessage(
+        const replyListenerId = nse_bot.onReplyToMessage(
           message.chat.id,
           message.message_id,
           (message) => {
+            // prevent consecutive replys
+            nse_bot.removeReplyListener(replyListenerId);
             const received_message = message.text;
             nse_bot.sendMessage(
               message.chat.id,
@@ -75,14 +75,6 @@ nse_bot.on('callback_query', function onCallbackQuery(callbackQuery) {
       })
       .catch((err) => console.log(err.message));
   }
-
-  // console.log(callbackQuery);
-
-  // nse_bot.answerCallbackQuery({
-  //   callback_query_id: callbackQuery.id,
-  //   text: 'Yoooo',
-  //   show_alert: true,
-  // });
 });
 
 const PORT = process.env.PORT || 5000;
