@@ -1,66 +1,89 @@
 const express = require('express');
 require('dotenv').config();
 
-const { errorHandler } = require('./middleware/errors');
-const cors = require('cors');
 const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 
-const nse_bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
-nse_bot.on('polling_error', (msg) => console.log('polling error'));
-
-// middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+const token = process.env.TELEGRAM_TOKEN;
+const nse_bot = new TelegramBot(token, { polling: true });
+nse_bot.on('polling_error', (msg) => console.log(msg));
 
 //telegram bot
-nse_bot.on('message', (msg) => {
-  let Hi = 'hi';
-  if (msg.text.toString().toLowerCase().indexOf(Hi) === 0) {
-    bot.sendMessage(msg.chat.id, 'Hello dear user');
-  }
+let inline_keyboard = [
+  [
+    {
+      text: 'Get all stocks',
+      callback_data: 'Get all stocks',
+    },
+    {
+      text: 'Get a particular stock price',
+      callback_data: 'Get a particular stock price',
+    },
+  ],
+  [
+    {
+      text: 'Exit',
+      callback_data: 'Exit',
+    },
+  ],
+];
+
+nse_bot.onText(/\/start/, (msg) => {
+  nse_bot.sendMessage(
+    msg.chat.id,
+    `Welcome to the NSE bot ${msg.from.first_name}`,
+    {
+      reply_markup: {
+        inline_keyboard,
+      },
+    }
+  );
 });
 
-// nse_bot.onText('/start', (msg) => {
-//   const {
-//     chat: { id },
-//   } = msg;
+//handle keyboard prompts
+nse_bot.on('callback_query', function onCallbackQuery(callbackQuery) {
+  if (callbackQuery.data === `Get all stocks`) {
+    nse_bot
+      .sendMessage(callbackQuery.message.chat.id, 'Here are all stocks')
+      .catch((err) => console.log(err.message));
+  } else if (callbackQuery.data === `Get a particular stock price`) {
+    nse_bot
+      .sendMessage(
+        callbackQuery.message.chat.id,
+        'Kindly send the name of the stock',
+        {
+          reply_markup: {
+            force_reply: true,
+          },
+        }
+      )
+      .then((message) => {
+        console.log(message);
 
-//   nse_bot.sendMessage(id, `Welcome to the NSE bot`, {
-//     reply_markup: {
-//       inline_keyboard,
-//     },
-//   });
-// });
+        nse_bot.onReplyToMessage(
+          message.chat.id,
+          message.message_id,
+          (message) => {
+            const received_message = message.text;
+            nse_bot.sendMessage(
+              message.chat.id,
+              `Here is the price for ${received_message}`
+            );
+          }
+        );
+      })
+      .catch((err) => console.log(err.message));
+  }
 
-// nse_bot.onText('message', (msg) => {
-//   const {
-//     chat: { id },
-//   } = msg;
+  // console.log(callbackQuery);
 
-//   nse_bot.sendMessage(id, `Welcome to the NSE bot`, {
-//     reply_markup: {
-//       inline_keyboard,
-//     },
-//   });
-// });
-
-// nse_bot.onText('Get all stocks', (msg) => {
-//   nse_bot.sendMessage(msg.chat.id, 'Fetch all');
-// });
-
-// nse_bot.onText('Get a particular stock price', (msg) => {
-//   nse_bot
-//     .sendMessage(msg.chat.id, 'Kindly send the name of the stock')
-//     .then((message) => {
-//       nse_bot.onReplyToMessage(message.chat.id, message.message_id, (msg) => {
-//         const received_message = msg.text;
-//         nse_bot.sendMessage(`Here is the price for ${received_message}`);
-//       });
-//     });
-// });
+  // nse_bot.answerCallbackQuery({
+  //   callback_query_id: callbackQuery.id,
+  //   text: 'Yoooo',
+  //   show_alert: true,
+  // });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
