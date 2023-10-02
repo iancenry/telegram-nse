@@ -15,6 +15,7 @@ const fetchStock = async (stockId) => {
   try {
     const response = await axios.request(options);
     console.log(response.data);
+    return response.data;
   } catch (error) {
     console.error(error.message);
   }
@@ -44,9 +45,12 @@ const onCallbackQuery = (callbackQuery) => {
             // prevent consecutive replys
             bot.nse_bot.removeReplyListener(replyListenerId);
             const received_message = message.text;
+
+            const data = fetchStock('saf');
+
             bot.nse_bot.sendMessage(
               message.chat.id,
-              `Here is the price for ${received_message}`
+              `Here is the price for ${received_message}: ${data}`
             );
           }
         );
@@ -54,7 +58,6 @@ const onCallbackQuery = (callbackQuery) => {
       .catch((err) => console.log(err.message));
   } else {
     // TODO - transfer
-    fetchStock('saf');
     bot.nse_bot
       .sendMessage(callbackQuery.message.chat.id, 'See you next time 💸')
       .catch((err) => console.log(err.message));
