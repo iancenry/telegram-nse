@@ -1,7 +1,7 @@
 const axios = require('axios');
 const bot = require('./index');
 
-// TODO finsh
+// TODO finsh - try https://nse-shares.onrender.com/stocks/
 const fetchStock = async (stockId) => {
   const options = {
     method: 'GET',
