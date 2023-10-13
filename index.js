@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 
 const TelegramBot = require('node-telegram-bot-api');
@@ -45,6 +46,8 @@ nse_bot.onText(/\/start/, (msg) => {
 
 //handle keyboard prompts
 nse_bot.on('callback_query', onCallbackQuery);
+
+app.use(cors());
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
